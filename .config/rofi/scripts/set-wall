@@ -1,0 +1,123 @@
+#!/bin/bash
+
+WALL_DIR="/home/okcr/Pictures/wallpapers/"
+FEH_BG="$HOME/.fehbg"
+CAVA_CONF="$HOME/.config/cava/config"
+ALACRITTY_CONF="$HOME/.config/alacritty/alacritty.toml"
+
+make_glow() {
+    python3 -c "
+import colorsys
+color = '$1'.lstrip('#')
+r, g, b = tuple(int(color[i:i+2], 16)/255. for i in (0, 2, 4))
+h, l, s = colorsys.rgb_to_hls(r, g, b)
+l, s = 0.75, 1.0
+r, g, b = colorsys.hls_to_rgb(h, l, s)
+print('#%02x%02x%02x' % (int(r*255), int(g*255), int(b*255)))
+"
+}
+
+get_dynamic_params() {
+    python3 -c "
+import colorsys
+color = '$1'.lstrip('#')
+r, g, b = tuple(int(color[i:i+2], 16)/255. for i in (0, 2, 4))
+lum = 0.2126*r + 0.7152*g + 0.0722*b
+opacity = 0.4 if lum < 0.5 else 0.13
+print(opacity)
+"
+}
+
+list_walls() {
+    echo -en "Browse... 󰉋\0icon\x1ffolder\n"
+    for wall in "$WALL_DIR"*; do
+        [ -e "$wall" ] || continue
+        echo -en "$(basename "$wall")\0icon\x1f$wall\n"
+    done
+}
+
+source "$HOME/.cache/wal/colors.sh" 2>/dev/null
+
+ROFI_THEME="
+* {
+    background-color: transparent;
+    text-color: #ffffff;
+    accent: ${color2:-#ffffff};
+}
+
+window {
+    width: 85%;
+    height: 75%;
+    border-radius: 20px;
+    background-color: ${color0:-#111111}e6;
+    border: 3px;
+    border-color: @accent;
+}
+
+mainbox {
+    children: [ inputbar, listview ];
+}
+
+listview {
+    columns: 5;
+    lines: 2;
+    spacing: 30px;
+    padding: 40px;
+    fixed-columns: true;
+}
+
+element {
+    orientation: vertical;
+    border-radius: 15px;
+    padding: 10px;
+}
+
+element selected {
+    background-color: ${color2:-#ffffff}33;
+    border: 2px;
+    border-color: @accent;
+}
+
+element-icon {
+    size: 250px;
+    horizontal-align: 0.5;
+    vertical-align: 0.5;
+    background-color: transparent;
+    /* إجبار الأيقونة على عدم أخذ أي لون خلفية */
+    border: 0px;
+}
+
+element-text {
+    horizontal-align: 0.5;
+    text-color: inherit;
+}
+
+inputbar {
+    padding: 20px;
+    children: [ prompt, entry ];
+}
+"
+
+selection=$(list_walls | rofi -dmenu -i -p "Wall" -show-icons -theme-str "$ROFI_THEME")
+
+if [ "$selection" = "Browse... 󰉋" ]; then
+    target=$(zenity --file-selection --title="Select Wallpaper")
+elif [ -n "$selection" ]; then
+    target="$WALL_DIR$selection"
+fi
+
+if [ -n "$target" ]; then
+    feh --bg-fill "$target"
+    echo "feh --bg-fill '$target'" > "$FEH_BG"
+    wal -i "$target" -n -q
+    source "$HOME/.cache/wal/colors.sh"
+
+    GLOW1=$(make_glow "$color1")
+    GLOW2=$(make_glow "$color2")
+    sed -i "s/gradient_color_1 = .*/gradient_color_1 = '$GLOW1'/" "$CAVA_CONF"
+    sed -i "s/gradient_color_2 = .*/gradient_color_2 = '$GLOW2'/" "$CAVA_CONF"
+    pkill -USR1 cava
+
+    NEW_OPACITY=$(get_dynamic_params "$color0")
+    sed -i "s/opacity = .*/opacity = $NEW_OPACITY/" "$ALACRITTY_CONF"
+fi

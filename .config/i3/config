@@ -1,0 +1,160 @@
+###############################################################################
+# 1. VARIABLES & GENERAL SETTINGS
+###############################################################################
+set $mod Mod4
+font pango:Open sans 11
+floating_modifier $mod
+default_border pixel 2
+gaps inner 8
+gaps outer 0
+
+# Workspaces Names
+set $ws1 "1"
+set $ws2 "2"
+set $ws3 "3"
+set $ws4 "4"
+set $ws5 "5"
+set $ws6 "6"
+set $ws7 "7"
+set $ws8 "8"
+set $ws9 "9"
+set $ws10 "10"
+
+###############################################################################
+# 2. AUTO-START (Background Apps & Services)
+###############################################################################
+# Keyboard Layout (Arabic/English)
+exec_always --no-startup-id setxkbmap -layout "us,ara" -option "grp:alt_shift_toggle"
+
+# Polkit & System Services
+exec_always --no-startup-id /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1 &
+exec_always --no-startup-id nm-applet &
+exec_always --no-startup-id xss-lock --transfer-sleep-lock -- i3lock --nofork &
+
+# Visuals & Wallpaper
+exec_always --no-startup-id picom &
+exec_always --no-startup-id sh ~/.fehbg
+exec_always --no-startup-id dunst &
+
+# Polybar Launch
+exec_always --no-startup-id killall -q polybar; ~/.config/polybar/launch.sh
+
+# Others
+exec_always --no-startup-id mpd &
+exec_always --no-startup-id battery &
+exec_always --no-startup-id light -I
+
+# Default Apps Mime-type
+exec_always --no-startup-id xdg-mime default org.kde.gwenview.desktop image/*
+exec_always --no-startup-id xdg-mime default vlc.desktop video/*
+exec_always --no-startup-id xdg-mime default org.kde.kate.desktop text/plain
+
+###############################################################################
+# 3. SHORTCUTS (Apps & System)
+###############################################################################
+# Essentials
+bindsym $mod+Return exec alacritty
+bindsym $mod+q kill
+bindsym $mod+Escape exec xkill
+bindsym $mod+i exec i3lock
+bindsym $mod+Mod1+l exec --no-startup-id betterlockscreen -l blur
+
+# Rofi Menus
+bindsym $mod+space exec "rofi -show drun -no-default-config -config ~/.config/rofi/main.rasi"
+bindsym $mod+a     exec "rofi -show window -no-default-config -config ~/.config/rofi/main.rasi"
+bindsym $mod+s     exec "rofi -show drun -no-default-config -config ~/.config/rofi/full_screen.rasi"
+bindsym $mod+z     exec "rofi -show  -modi ':rofi-bookmarks' -no-default-config -config ~/.config/rofi/main.rasi"
+bindsym $mod+x     exec "rofi-powermenu"
+bindsym $mod+c     exec "rofi-screenshot"
+
+# Scripts & Tools
+bindsym $mod+shift+w exec --no-startup-id ~/.config/rofi/scripts/set-wall.sh
+bindsym $mod+o       exec ~/.config/polybar/launch.sh
+bindsym Print        exec --no-startup-id flameshot full -p ~/Pictures
+bindsym $mod+shift+s exec --no-startup-id flameshot gui
+
+# Hardware Control (Brightness & Audio)
+bindsym XF86MonBrightnessUp   exec light -A 2 && light -O && brightness &
+bindsym XF86MonBrightnessDown exec light -U 2 && light -O && brightness &
+bindsym XF86AudioRaiseVolume  exec --no-startup-id amixer -D pulse sset Master 5%+ && volume &
+bindsym XF86AudioLowerVolume  exec --no-startup-id amixer -D pulse sset Master 5%- && volume &
+bindsym XF86AudioMute         exec --no-startup-id pactl set-sink-mute @DEFAULT_SINK@ toggle && mute &
+
+###############################################################################
+# 4. WINDOW MANAGEMENT & NAVIGATION
+###############################################################################
+# Focus
+bindsym $mod+j focus left
+bindsym $mod+k focus down
+bindsym $mod+l focus up
+bindsym $mod+semicolon focus right
+bindsym $mod+Left focus left
+bindsym $mod+Down focus down
+bindsym $mod+Up focus up
+bindsym $mod+Right focus right
+
+# Move Window
+bindsym $mod+Shift+j move left
+bindsym $mod+Shift+k move down
+bindsym $mod+Shift+l move up
+bindsym $mod+Shift+semicolon move right
+bindsym $mod+Shift+Left move left
+bindsym $mod+Shift+Down move down
+bindsym $mod+Shift+Up move up
+bindsym $mod+Shift+Right move right
+
+# Layouts
+bindsym $mod+h split h
+bindsym $mod+v split v
+bindsym $mod+f fullscreen toggle
+bindsym $mod+e layout toggle split
+bindsym $mod+Shift+space floating toggle
+bindsym $mod+Shift+f focus mode_toggle
+
+# Resurrect (Save/Restore Layout)
+bindsym $mod+t exec --no-startup-id i3-resurrect restore
+bindsym $mod+y exec --no-startup-id i3-resurrect save
+
+# Workspaces Navigation
+bindsym $mod+1 workspace number $ws1
+bindsym $mod+2 workspace number $ws2
+bindsym $mod+3 workspace number $ws3
+bindsym $mod+4 workspace number $ws4
+bindsym $mod+5 workspace number $ws5
+bindsym $mod+6 workspace number $ws6
+bindsym $mod+7 workspace number $ws7
+bindsym $mod+8 workspace number $ws8
+bindsym $mod+9 workspace number $ws9
+bindsym $mod+0 workspace number $ws10
+
+# Move Container to Workspace
+bindsym $mod+Shift+1 move container to workspace number $ws1
+bindsym $mod+Shift+2 move container to workspace number $ws2
+bindsym $mod+Shift+3 move container to workspace number $ws3
+bindsym $mod+Shift+4 move container to workspace number $ws4
+bindsym $mod+Shift+5 move container to workspace number $ws5
+
+# Monitor Settings
+bindsym $mod+n exec --no-startup-id xrandr --auto --output eDP-1 --mode 1920x1080 --right-of HDMI-1 && i3-msg restart
+bindsym $mod+m exec --no-startup-id xrandr --auto --output HDMI-1 --off && i3-msg restart
+bindsym $mod+b move workspace to output right
+
+###############################################################################
+# 5. APPEARANCE & COLORS
+###############################################################################
+client.focused          #343746 #343746 #F8F8F2 #343746 #343746
+client.focused_inactive #343746 #343746 #F8F8F2 #21222C #21222C
+client.unfocused        #343746 #343746 #F8F8F2 #21222C #21222C
+
+bar {
+    mode invisible
+    tray_output none
+}
+
+###############################################################################
+# 6. RELOAD & EXIT
+###############################################################################
+bindsym $mod+Shift+c reload
+bindsym $mod+Shift+r restart
+bindsym $mod+Shift+e exec "i3-nagbar -t warning -m 'Exit i3?' -B 'Yes' 'i3-msg exit'"
+bindsym $mod+Shift+x exec "i3-nagbar -t warning -m 'Exit i3?' -B 'Yes' 'i3-msg exit'"
